@@ -90,27 +90,177 @@ loop 循环支持 label 标签, break, continue 可以跟随标签
 
 if else loop while match
 
-* TODO [[file:ch04-00-understanding-ownership.md][认识所有权]] [0/3]
-** TODO [[file:ch04-01-what-is-ownership.md][什么是所有权？]]
-** TODO [[file:ch04-02-references-and-borrowing.md][引用与借用]]
-** TODO [[file:ch04-03-slices.md][Slice 类型]]
+* DONE [[file:ch04-00-understanding-ownership.md][认识所有权]] [3/3]
+CLOSED: [2024-12-26 Thu 20:21]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 20:21]
+:END:
 
-* TODO [[file:ch05-00-structs.md][使用结构体组织相关联的数据]] [0/3]
-** TODO [[file:ch05-01-defining-structs.md][结构体的定义和实例化]]
-** TODO [[file:ch05-02-example-structs.md][结构体示例程序]]
-** TODO [[file:ch05-03-method-syntax.md][方法语法]]
+** DONE [[file:ch04-01-what-is-ownership.md][什么是所有权？]]
+CLOSED: [2024-12-26 Thu 20:16]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 20:16]
+:END:
 
-* TODO [[file:ch06-00-enums.md][枚举和模式匹配]] [0/3]
-** TODO [[file:ch06-01-defining-an-enum.md][枚举的定义]]
-** TODO [[file:ch06-02-match.md][`match` 控制流结构]]
-** TODO [[file:ch06-03-if-let.md][`if let` 简洁控制流]]
+栈和堆上的值都属于某个所有者, 栈上的数据会随着函数退出栈被清空而被清理掉, 堆上的
+数据就不是这么简单了
 
-* TODO [[file:ch07-00-managing-growing-projects-with-packages-crates-and-modules.md][使用包、Crate 和模块管理不断增长的项目]] [0/5]
-** TODO [[file:ch07-01-packages-and-crates.md][包和 Crate]]
-** TODO [[file:ch07-02-defining-modules-to-control-scope-and-privacy.md][定义模块来控制作用域与私有性]]
-** TODO [[file:ch07-03-paths-for-referring-to-an-item-in-the-module-tree.md][引用模块项目的路径]]
-** TODO [[file:ch07-04-bringing-paths-into-scope-with-the-use-keyword.md][使用 `use` 关键字将路径引入作用域]]
-** TODO [[file:ch07-05-separating-modules-into-different-files.md][将模块拆分成多个文件]]
+栈上的数据都是已知大小的类型, 堆上可以存储未知大小的类型, 默认情况下已经大小的类
+型赋值时是直接复制一份到栈中, 在栈上是极快的分配的
+
+rust 内存在拥有它的变量离开作用时被自动释放
+
+let s1 = String::from("hello");
+let s2 = s1;
+
+这里栈上会存在两个值, 一个值 s1,一个是 s2, 他们占用栈上的空间是一样的, 他们都有
+一个指针, 指向堆上的一块内存, 栈上是 指针,长度,和容量三个值. s2 拥有堆上数据的所
+有权, s1 和 s2 会在函数退出后, 清空栈时被清空, 同时 s2 指向的堆上数据,在 s2 离开
+作用域时被释放
+
+字符串从 s1 转移给 s2 所有权, 叫做所有权转移 (move)
+
+像整型这样的在编译时已知大小的类型被整个存储在栈上，所以拷贝其实际的值是快速的
+
+如果一个类型实现了 Copy trait，那么一个旧的变量在将其赋值给其他变量后仍然可用。
+
+** DONE [[file:ch04-02-references-and-borrowing.md][引用与借用]]
+CLOSED: [2024-12-26 Thu 20:16]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 20:16]
+:END:
+
+引用像是一个指针, 在栈上创建了一个指针值, 这个值指向栈上的另一个值(所有权)
+
+例如: let s=String::from("hhh") let s1=&s; 这里 s1 就是一个指针(usize 类型), s 是栈上的一个
+值包含了 指针,长度,容量, 它的指针指向堆上的字符串
+
+"&" 就是引用的, 它不会获得所有权, s1 借用了 s 的值, 创建引用的行为被称为借用
+
+"*" 是解引用
+
+统一时刻只能存在一个可变引用,来防止竞争修改数据,导致数据错误, 不可变引用和可变引
+用不能同时存在
+
+** DONE [[file:ch04-03-slices.md][Slice 类型]]
+CLOSED: [2024-12-26 Thu 20:21]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 20:21]
+:END:
+
+let s = String::from("hello");
+let slice = &s[0..2];
+let slice = &s[..2];
+
+slice 也是引用, 引用了原始数据的部分内容, 没有所有权
+
+* DONE [[file:ch05-00-structs.md][使用结构体组织相关联的数据]] [3/3]
+CLOSED: [2024-12-26 Thu 20:42]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 20:42]
+:END:
+
+** DONE [[file:ch05-01-defining-structs.md][结构体的定义和实例化]]
+CLOSED: [2024-12-26 Thu 20:42]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 20:42]
+:END:
+
+元祖结构体, 单元结构体
+
+读取结构体成员时, 注意结构体成员的所有权转移问题
+
+当结构体成员是引用类型时,注意生命周期标识
+
+** DONE [[file:ch05-02-example-structs.md][结构体示例程序]]
+CLOSED: [2024-12-26 Thu 20:42]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 20:42]
+:END:
+
+dbg!(T:Debug)
+
+** DONE [[file:ch05-03-method-syntax.md][方法语法]]
+CLOSED: [2024-12-26 Thu 20:42]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 20:42]
+:END:
+
+impl T {
+  fn func(&self) -> (self &T)  t.func  Rust 自动引用和解引用
+  fn funcx(self) -> (self T)   t.func
+}
+
+关联函数, 就是第一个参数不是self, 这个函数是和这个结构体关联的, 用 "结构体的名
+称::函数名" 进行调用
+
+* DONE [[file:ch06-00-enums.md][枚举和模式匹配]] [3/3]
+CLOSED: [2024-12-26 Thu 20:45]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 20:45]
+:END:
+
+** DONE [[file:ch06-01-defining-an-enum.md][枚举的定义]]
+CLOSED: [2024-12-26 Thu 20:45]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 20:45]
+:END:
+
+enum Message {
+    Quit,
+    Move { x: i32, y: i32 },
+    Write(String),
+    ChangeColor(i32, i32, i32),
+}
+
+
+** DONE [[file:ch06-02-match.md][`match` 控制流结构]]
+CLOSED: [2024-12-26 Thu 20:45]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 20:45]
+:END:
+
+** DONE [[file:ch06-03-if-let.md][`if let` 简洁控制流]]
+CLOSED: [2024-12-26 Thu 20:45]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 20:45]
+:END:
+
+* DONE [[file:ch07-00-managing-growing-projects-with-packages-crates-and-modules.md][使用包、Crate 和模块管理不断增长的项目]] [5/5]
+CLOSED: [2024-12-26 Thu 22:28]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 22:28]
+:END:
+
+** DONE [[file:ch07-01-packages-and-crates.md][包和 Crate]]
+CLOSED: [2024-12-26 Thu 22:28]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 22:28]
+:END:
+
+** DONE [[file:ch07-02-defining-modules-to-control-scope-and-privacy.md][定义模块来控制作用域与私有性]]
+CLOSED: [2024-12-26 Thu 22:28]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 22:28]
+:END:
+
+** DONE [[file:ch07-03-paths-for-referring-to-an-item-in-the-module-tree.md][引用模块项目的路径]]
+CLOSED: [2024-12-26 Thu 22:28]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 22:28]
+:END:
+
+** DONE [[file:ch07-04-bringing-paths-into-scope-with-the-use-keyword.md][使用 `use` 关键字将路径引入作用域]]
+CLOSED: [2024-12-26 Thu 22:28]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 22:28]
+:END:
+
+** DONE [[file:ch07-05-separating-modules-into-different-files.md][将模块拆分成多个文件]]
+CLOSED: [2024-12-26 Thu 22:28]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 22:28]
+:END:
 
 * TODO [[file:ch08-00-common-collections.md][常见集合]] [0/3]
 ** TODO [[file:ch08-01-vectors.md][使用 Vector 储存列表]]
