@@ -262,10 +262,37 @@ CLOSED: [2024-12-26 Thu 22:28]
 - State "DONE"       from "TODO"       [2024-12-26 Thu 22:28]
 :END:
 
-* TODO [[file:ch08-00-common-collections.md][常见集合]] [0/3]
-** TODO [[file:ch08-01-vectors.md][使用 Vector 储存列表]]
-** TODO [[file:ch08-02-strings.md][使用字符串储存 UTF-8 编码的文本]]
-** TODO [[file:ch08-03-hash-maps.md][使用 Hash Map 储存键值对]]
+* DONE [[file:ch08-00-common-collections.md][常见集合]] [3/3]
+CLOSED: [2024-12-26 Thu 22:40]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 22:40]
+:END:
+
+** DONE [[file:ch08-01-vectors.md][使用 Vector 储存列表]]
+CLOSED: [2024-12-26 Thu 22:40]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 22:40]
+:END:
+
+** DONE [[file:ch08-02-strings.md][使用字符串储存 UTF-8 编码的文本]]
+CLOSED: [2024-12-26 Thu 22:40]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 22:40]
+:END:
+
+let s1 = String::from("tic");
+let s2 = String::from("tac");
+let s3 = String::from("toe");
+
+let s = format!("{s1}-{s2}-{s3}");
+
+字符串不能索引, 可以通过切片引用, 注意切片必须是 utf8 位置
+
+** DONE [[file:ch08-03-hash-maps.md][使用 Hash Map 储存键值对]]
+CLOSED: [2024-12-26 Thu 22:39]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 22:39]
+:END:
 
 * TODO [[file:ch09-00-error-handling.md][错误处理]] [0/3]
 ** TODO [[file:ch09-01-unrecoverable-errors-with-panic.md][用 `panic!` 处理不可恢复的错误]]
