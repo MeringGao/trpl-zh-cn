@@ -4,19 +4,91 @@
 * [[file:foreword.md][前言]]
 * [[file:ch00-00-introduction.md][简介]]
 
-* TODO [[file:ch01-00-getting-started.md][入门指南]] [0/3]
-** TODO [[file:ch01-01-installation.md][安装]]
-** TODO [[file:ch01-02-hello-world.md][Hello, World!]]
-** TODO [[file:ch01-03-hello-cargo.md][Hello, Cargo!]]
+* DONE [[file:ch01-00-getting-started.md][入门指南]] [3/3]
+CLOSED: [2024-12-26 Thu 12:46]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 12:46]
+:END:
 
-* TODO [[file:ch02-00-guessing-game-tutorial.md][写个猜数字游戏]]
+** DONE [[file:ch01-01-installation.md][安装]]
+CLOSED: [2024-12-26 Thu 12:44]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 12:44]
+:END:
 
-* TODO [[file:ch03-00-common-programming-concepts.md][常见编程概念]] [0/5]
-** TODO [[file:ch03-01-variables-and-mutability.md][变量与可变性]]
-** TODO [[file:ch03-02-data-types.md][数据类型]]
-** TODO [[file:ch03-03-how-functions-work.md][函数]]
-** TODO [[file:ch03-04-comments.md][注释]]
-** TODO [[file:ch03-05-control-flow.md][控制流]]
+** DONE [[file:ch01-02-hello-world.md][Hello, World!]]
+CLOSED: [2024-12-26 Thu 12:45]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 12:45]
+:END:
+
+** DONE [[file:ch01-03-hello-cargo.md][Hello, Cargo!]]
+CLOSED: [2024-12-26 Thu 12:45]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 12:45]
+:END:
+
+* DONE [[file:ch02-00-guessing-game-tutorial.md][写个猜数字游戏]]
+CLOSED: [2024-12-26 Thu 12:46]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 12:46]
+:END:
+
+* DONE [[file:ch03-00-common-programming-concepts.md][常见编程概念]] [5/5]
+CLOSED: [2024-12-26 Thu 13:08]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 13:08]
+:END:
+
+** DONE [[file:ch03-01-variables-and-mutability.md][变量与可变性]]
+CLOSED: [2024-12-26 Thu 12:53]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 12:53]
+:END:
+
+常量的命名习惯, 大写加下划线
+
+let 同名的变量名会遮蔽前面的变量名
+
+** DONE [[file:ch03-02-data-types.md][数据类型]]
+CLOSED: [2024-12-26 Thu 13:02]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 13:02]
+:END:
+
+数值类型, 数子内部可以方便使用"_" 分割, 例如 ~1000_000~
+
+0xff 16 进制, 0o77 8 进制, 0b1111_0000 二进制, b'A' 单字节字符, 仅限于 u8, 注意
+和 单字符 char 不同, char 是 4 字节的,代表 Unicode 标量值,例如: 'A', 双引号就是表示字符串, 例如: "A"
+占用 1 字节,字符串长度取决于字符串的内容
+
+i{8,16,32,64,128} u{8,16,32,64,128} isize 和 usize 是平台相关的
+
+整型溢出, 在 debug 模式下会 panic ,但是在 release 模式下会回绕.
+
+** DONE [[file:ch03-03-how-functions-work.md][函数]]
+CLOSED: [2024-12-26 Thu 13:06]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 13:06]
+:END:
+
+rust 函数用下划线链接单词作为函数名的惯例
+
+** DONE [[file:ch03-04-comments.md][注释]]
+CLOSED: [2024-12-26 Thu 13:06]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 13:06]
+:END:
+
+** DONE [[file:ch03-05-control-flow.md][控制流]]
+CLOSED: [2024-12-26 Thu 13:08]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-26 Thu 13:08]
+:END:
+
+loop 循环支持 label 标签, break, continue 可以跟随标签
+
+if else loop while match
 
 * TODO [[file:ch04-00-understanding-ownership.md][认识所有权]] [0/3]
 ** TODO [[file:ch04-01-what-is-ownership.md][什么是所有权？]]
