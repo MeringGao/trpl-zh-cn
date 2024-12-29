@@ -672,18 +672,286 @@ CLOSED: [2024-12-29 Sun 16:57]
 
 ~eprintln!~
 
-* TODO [[file:ch13-00-functional-features.md][Rust 中的函数式语言功能：迭代器与闭包]] [0/4]
-** TODO [[file:ch13-01-closures.md][闭包：可以捕获其环境的匿名函数]]
-** TODO [[file:ch13-02-iterators.md][使用迭代器处理元素序列]]
-** TODO [[file:ch13-03-improving-our-io-project.md][改进之前的 I/O 项目]]
-** TODO [[file:ch13-04-performance.md][性能比较：循环对迭代器]]
+* DONE [[file:ch13-00-functional-features.md][Rust 中的函数式语言功能：迭代器与闭包]] [4/4]
+CLOSED: [2024-12-29 Sun 19:42]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 19:42]
+:END:
 
-* TODO [[file:ch14-00-more-about-cargo.md][更多关于 Cargo 和 Crates.io 的内容]] [0/5]
-** TODO [[file:ch14-01-release-profiles.md][采用发布配置自定义构建]]
-** TODO [[file:ch14-02-publishing-to-crates-io.md][将 crate 发布到 Crates.io]]
-** TODO [[file:ch14-03-cargo-workspaces.md][Cargo 工作空间]]
-** TODO [[file:ch14-04-installing-binaries.md][使用 `cargo install` 安装二进制文件]]
-** TODO [[file:ch14-05-extending-cargo.md][Cargo 自定义扩展命令]]
+** DONE [[file:ch13-01-closures.md][闭包：可以捕获其环境的匿名函数]]
+CLOSED: [2024-12-29 Sun 19:42]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 19:42]
+:END:
+
+它们直接对应到函数获取参数的三种方式：不可变借用、可变借用和获取所有权。闭包将根
+据函数体中对捕获值的操作来决定使用哪种方式。
+
+不可变借用
+#+begin_src rust
+  fn main() {
+      let list = vec![1, 2, 3];
+      println!("Before defining closure: {list:?}");
+
+      let only_borrows = || println!("From closure: {list:?}");
+
+      println!("Before calling closure: {list:?}");
+      only_borrows();
+      println!("After calling closure: {list:?}");
+  }
+#+end_src
+
+可变借用
+
+#+begin_src rust
+  fn main() {
+      let mut list = vec![1, 2, 3];
+      println!("Before defining closure: {list:?}");
+
+      let mut borrows_mutably = || list.push(7);
+
+      borrows_mutably();
+      println!("After calling closure: {list:?}");
+  }
+#+end_src
+
+转移
+#+begin_src rust
+  use std::thread;
+
+  fn main() {
+      let list = vec![1, 2, 3];
+      println!("Before defining closure: {list:?}");
+
+      thread::spawn(move || println!("From thread: {list:?}"))
+          .join()
+          .unwrap();
+  }
+#+end_src
+
+一旦闭包捕获了定义它的环境中的某个值的引用或所有权（也就影响了什么会被移 进 闭包，
+如有），闭包体中的代码则决定了在稍后执行闭包时，这些引用或值将如何处理（也就影响
+了什么会被移 出 闭包，如有）。闭包体可以执行以下任一操作：将一个捕获的值移出闭包，
+修改捕获的值，既不移动也不修改值，或者一开始就不从环境中捕获任何值。
+
+闭包捕获和处理环境中的值的方式会影响闭包实现哪些 trait，而 trait 是函数和结构体
+指定它们可以使用哪些类型闭包的方式。根据闭包体如何处理这些值，闭包会自动、渐进地
+实现一个、两个或全部三个 Fn trait。
+
+FnOnce 适用于只能被调用一次的闭包。所有闭包至少都实现了这个 trait，因为所有闭包
+都能被调用。一个会将捕获的值从闭包体中移出的闭包只会实现
+- FnOnce trait，而不会实现其他 Fn 相关的 trait，因为它只能被调用一次。
+- FnMut 适用于不会将捕获的值移出闭包体，但可能会修改捕获值的闭包。这类闭包可以被
+  调用多次。
+- Fn 适用于既不将捕获的值移出闭包体，也不修改捕获值的闭包，同时也包括不从环境中
+  捕获任何值的闭包。这类闭包可以被多次调用而不会改变其环境，这在会多次并发调用闭
+  包的场景中十分重要。
+
+#+begin_src rust
+  impl<T> Option<T> {
+      pub fn unwrap_or_else<F>(self, f: F) -> T
+      where
+          F: FnOnce() -> T,
+      {
+          match self {
+              Some(x) => x,
+              None => f(),
+          }
+      }
+  }
+#+end_src
+
+泛型 F 的 trait bound 是 FnOnce() -> T，这意味着 F 必须能够被调用一次，没有参数
+并返回一个 T。在 trait bound 中使用 FnOnce 表示 *unwrap_or_else 最多只会调用 f 一
+次*
+
+#+begin_src rust
+  #[derive(Debug)]
+  struct Rectangle {
+      width: u32,
+      height: u32,
+  }
+
+  fn main() {
+      let mut list = [
+          Rectangle {
+              width: 10,
+              height: 1,
+          },
+          Rectangle {
+              width: 3,
+              height: 5,
+          },
+          Rectangle {
+              width: 7,
+              height: 12,
+          },
+      ];
+
+      list.sort_by_key(|r| r.width);
+      println!("{list:#?}");
+  }
+#+end_src
+
+ort_by_key 被定义为接收一个 FnMut 闭包的原因是它会多次调用这个闭包：对 slice 中
+的每个元素调用一次。闭包 |r| r.width 不捕获、修改或将任何东西移出它的环境，所以
+它满足 trait bound 的要求。
+
+
+#+begin_src rust
+  #[derive(Debug)]
+  struct Rectangle {
+      width: u32,
+      height: u32,
+  }
+
+  fn main() {
+      let mut list = [
+          Rectangle {
+              width: 10,
+              height: 1,
+          },
+          Rectangle {
+              width: 3,
+              height: 5,
+          },
+          Rectangle {
+              width: 7,
+              height: 12,
+          },
+      ];
+
+      let mut sort_operations = vec![];
+      let value = String::from("closure called");
+
+      list.sort_by_key(|r| {
+          sort_operations.push(value);
+          r.width
+      });
+      println!("{list:#?}");
+  }
+#+end_src
+上面这个变异失败是因为 value 是 String 没有实现 copy, 它转移了 value 到闭包中,
+而发生转移的闭包只能是 FnOnce
+
+下面这个闭包只是可变应用了一个值,所以可以满足 FnMut
+
+#+begin_src rust
+  #[derive(Debug)]
+  struct Rectangle {
+      width: u32,
+      height: u32,
+  }
+
+  fn main() {
+      let mut list = [
+          Rectangle {
+              width: 10,
+              height: 1,
+          },
+          Rectangle {
+              width: 3,
+              height: 5,
+          },
+          Rectangle {
+              width: 7,
+              height: 12,
+          },
+      ];
+
+      let mut num_sort_operations = 0;
+      list.sort_by_key(|r| {
+          num_sort_operations += 1;
+          r.width
+      });
+      println!("{list:#?}, sorted in {num_sort_operations} operations");
+  }
+#+end_src
+
+** DONE [[file:ch13-02-iterators.md][使用迭代器处理元素序列]]
+CLOSED: [2024-12-29 Sun 19:42]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 19:42]
+:END:
+
+迭代器是惰性的, 如果没有被消费编译会警告, 有些函数是生成一个迭代器,叫做迭代器适
+配器
+
+** DONE [[file:ch13-03-improving-our-io-project.md][改进之前的 I/O 项目]]
+CLOSED: [2024-12-29 Sun 19:42]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 19:42]
+:END:
+
+** DONE [[file:ch13-04-performance.md][性能比较：循环对迭代器]]
+CLOSED: [2024-12-29 Sun 19:42]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 19:42]
+:END:
+
+* DONE [[file:ch14-00-more-about-cargo.md][更多关于 Cargo 和 Crates.io 的内容]] [5/5]
+CLOSED: [2024-12-29 Sun 19:56]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 19:56]
+:END:
+
+** DONE [[file:ch14-01-release-profiles.md][采用发布配置自定义构建]]
+CLOSED: [2024-12-29 Sun 19:47]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 19:47]
+:END:
+
+** DONE [[file:ch14-02-publishing-to-crates-io.md][将 crate 发布到 Crates.io]]
+CLOSED: [2024-12-29 Sun 19:47]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 19:47]
+:END:
+
+** DONE [[file:ch14-03-cargo-workspaces.md][Cargo 工作空间]]
+CLOSED: [2024-12-29 Sun 19:56]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 19:56]
+:END:
+
+workspace/Cargo.toml
+#+begin_src toml
+  [workspace]
+
+  members = [
+      "adder",
+      "add_one",
+  ]
+
+  # 这是在工作空间中有两个 crate, 如果 adder crate 中希望使用 add_one 库, 那么可以
+  # 在 adder 的 Cargo.toml 中如下
+  [dependencies]
+  add_one = { path = "../add_one" }
+#+end_src
+
+还需注意的是工作空间只在根目录有一个 Cargo.lock，而不是在每一个 crate 目录都有
+Cargo.lock。这确保了所有的 crate 都使用完全相同版本的依赖。如果在 Cargo.toml 和
+add_one/Cargo.toml 中都增加 rand crate，则 Cargo 会将其都解析为同一版本并记录到
+唯一的 Cargo.lock 中。使得工作空间中的所有 crate 都使用相同的依赖意味着其中的
+crate 都是相互兼容的。让我们在 add_one/Cargo.toml 中的 [dependencies] 部分增加
+rand crate 以便能够在 add_one crate 中使用 rand crate：
+
+但是每个 package  希望使用外部包时,都是必须要在自己的 Cargo.toml 中引入的
+
+在工作空间中执行 cargo 命令 可以使用 ~-p~ 参数指定要执行的那一个 Package
+
+** DONE [[file:ch14-04-installing-binaries.md][使用 `cargo install` 安装二进制文件]]
+CLOSED: [2024-12-29 Sun 19:56]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 19:56]
+:END:
+
+** DONE [[file:ch14-05-extending-cargo.md][Cargo 自定义扩展命令]]
+CLOSED: [2024-12-29 Sun 19:56]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 19:56]
+:END:
+
+可执行目录下的 cargo-something 那么 cargo something 就是执行那个文件
 
 * TODO [[file:ch15-00-smart-pointers.md][智能指针]] [0/6]
 ** TODO [[file:ch15-01-box.md][使用 `Box<T>` 指向堆上数据]]
