@@ -953,19 +953,123 @@ CLOSED: [2024-12-29 Sun 19:56]
 
 可执行目录下的 cargo-something 那么 cargo something 就是执行那个文件
 
-* TODO [[file:ch15-00-smart-pointers.md][智能指针]] [0/6]
-** TODO [[file:ch15-01-box.md][使用 `Box<T>` 指向堆上数据]]
-** TODO [[file:ch15-02-deref.md][使用 `Deref` Trait 将智能指针当作常规引用处理]]
-** TODO [[file:ch15-03-drop.md][使用 `Drop` Trait 运行清理代码]]
-** TODO [[file:ch15-04-rc.md][`Rc<T>` 引用计数智能指针]]
-** TODO [[file:ch15-05-interior-mutability.md][`RefCell<T>` 与内部可变性模式]]
-** TODO [[file:ch15-06-reference-cycles.md][引用循环会导致内存泄漏]]
+* DONE [[file:ch15-00-smart-pointers.md][智能指针]] [6/6]
+CLOSED: [2024-12-29 Sun 20:17]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:17]
+:END:
 
-* TODO [[file:ch16-00-concurrency.md][无畏并发]] [0/4]
-** TODO [[file:ch16-01-threads.md][使用线程同时地运行代码]]
-** TODO [[file:ch16-02-message-passing.md][使用消息传递在线程间通信]]
-** TODO [[file:ch16-03-shared-state.md][共享状态并发]]
-** TODO [[file:ch16-04-extensible-concurrency-sync-and-send.md][使用 `Sync` 与 `Send` Traits 的可扩展并发]]
+** DONE [[file:ch15-01-box.md][使用 `Box<T>` 指向堆上数据]]
+CLOSED: [2024-12-29 Sun 20:02]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:02]
+:END:
+
+Box<dyn Trait> 用于动态分发，适合在编译时无法确定具体类型的场景。它允许你在运行
+时选择实现了某个 Trait 的不同对象，通常用于实现多态。使用 Box<dyn Trait> 会引入
+一些运行时开销，因为它需要通过虚函数表（vtable）进行方法调用。
+
+Box<impl Trait> 是一种返回类型的语法糖，用于静态分发。
+当函数返回一个实现了某个 Trait 的具体类型时，可以使用 impl Trait 来隐藏具体类型。
+这通常用于函数返回值的场景，省去了定义具体类型的必要性，而编译器会帮我们推断。
+
+** DONE [[file:ch15-02-deref.md][使用 `Deref` Trait 将智能指针当作常规引用处理]]
+CLOSED: [2024-12-29 Sun 20:17]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:17]
+:END:
+
+#+begin_src rust
+  use std::ops::Deref;
+
+  impl<T> Deref for MyBox<T> {
+      type Target = T;
+
+      fn deref(&self) -> &Self::Target {
+          &self.0
+      }
+  }
+  // *y 时，Rust 事实上在底层运行了如下代码：*(y.deref())
+#+end_src
+
+deref 方法返回值的引用，以及 *(y.deref()) 括号外边的普通解引用仍为必须的原因在于
+所有权。如果 deref 方法直接返回值而不是值的引用，其值（的所有权）将被移出 self。
+在这里以及大部分使用解引用运算符的情况下我们并不希望获取 MyBox<T> 内部值的所有权。
+
+Rust 在发现类型和 trait 实现满足三种情况时会进行 Deref 强制转换：
+
+当 T: Deref<Target=U> 时从 &T 到 &U。
+当 T: DerefMut<Target=U> 时从 &mut T 到 &mut U。
+当 T: Deref<Target=U> 时从 &mut T 到 &U。
+
+** DONE [[file:ch15-03-drop.md][使用 `Drop` Trait 运行清理代码]]
+CLOSED: [2024-12-29 Sun 20:17]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:17]
+:END:
+
+对于智能指针模式来说第二个重要的 trait 是 Drop，其允许我们在值要离开作用域时执行
+一些代码。可以为任何类型提供 Drop trait 的实现，同时所指定的代码被用于释放类似于
+文件或网络连接的资源。
+
+** DONE [[file:ch15-04-rc.md][`Rc<T>` 引用计数智能指针]]
+CLOSED: [2024-12-29 Sun 20:16]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:16]
+:END:
+
+** DONE [[file:ch15-05-interior-mutability.md][`RefCell<T>` 与内部可变性模式]]
+CLOSED: [2024-12-29 Sun 20:17]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:17]
+:END:
+
+** DONE [[file:ch15-06-reference-cycles.md][引用循环会导致内存泄漏]]
+CLOSED: [2024-12-29 Sun 20:17]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:17]
+:END:
+
+Weak<T>
+
+* DONE [[file:ch16-00-concurrency.md][无畏并发]] [4/4]
+CLOSED: [2024-12-29 Sun 20:43]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:43]
+:END:
+
+** DONE [[file:ch16-01-threads.md][使用线程同时地运行代码]]
+CLOSED: [2024-12-29 Sun 20:19]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:19]
+:END:
+
+** DONE [[file:ch16-02-message-passing.md][使用消息传递在线程间通信]]
+CLOSED: [2024-12-29 Sun 20:40]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:40]
+:END:
+
+** DONE [[file:ch16-03-shared-state.md][共享状态并发]]
+CLOSED: [2024-12-29 Sun 20:41]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:41]
+:END:
+
+** DONE [[file:ch16-04-extensible-concurrency-sync-and-send.md][使用 `Sync` 与 `Send` Traits 的可扩展并发]]
+CLOSED: [2024-12-29 Sun 20:43]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:43]
+:END:
+
+通过 Send 允许在线程间转移所有权几乎所有的 Rust 类型都是Send 的，不过有一些例外，
+包括 Rc<T>：这是不能 Send 的，因为如果克隆了 Rc<T> 的值并尝试将克隆的所有权转移
+到另一个线程，这两个线程都可能同时更新引用计数。
+
+Sync 标记 trait 表明一个实现了 Sync 的类型可以安全的在多个线程中拥有其值的引用。
+换一种方式来说，对于任意类型 T，如果 &T（T 的不可变引用）是 Send 的话 T 就是
+Sync 的，这意味着其引用就可以安全的发送到另一个线程。类似于 Send 的情况，基本类
+型是 Sync 的，完全由 Sync 的类型组成的类型也是 Sync 的。
 
 * TODO [[file:ch17-00-async-await.md][Async 和 await]] [0/6]
 ** TODO [[file:ch17-01-futures-and-syntax.md][Futures 和 async 语法]]
@@ -975,10 +1079,29 @@ CLOSED: [2024-12-29 Sun 19:56]
 ** TODO [[file:ch17-05-traits-for-async.md][深入理解 async 相关的 traits]]
 ** TODO [[file:ch17-06-futures-tasks-threads.md][Futures，任务（tasks）和线程（threads）]]
 
-* TODO [[file:ch18-00-oop.md][Rust 的面向对象编程特性]] [0/3]
-** TODO [[file:ch18-01-what-is-oo.md][面向对象语言的特点]]
-** TODO [[file:ch18-02-trait-objects.md][顾及不同类型值的 trait 对象]]
-** TODO [[file:ch18-03-oo-design-patterns.md][面向对象设计模式的实现]]
+* DONE [[file:ch18-00-oop.md][Rust 的面向对象编程特性]] [3/3]
+CLOSED: [2024-12-29 Sun 20:52]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:52]
+:END:
+
+** DONE [[file:ch18-01-what-is-oo.md][面向对象语言的特点]]
+CLOSED: [2024-12-29 Sun 20:50]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:50]
+:END:
+
+** DONE [[file:ch18-02-trait-objects.md][顾及不同类型值的 trait 对象]]
+CLOSED: [2024-12-29 Sun 20:52]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:52]
+:END:
+
+** DONE [[file:ch18-03-oo-design-patterns.md][面向对象设计模式的实现]]
+CLOSED: [2024-12-29 Sun 20:52]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 20:52]
+:END:
 
 * TODO [[file:ch19-00-patterns.md][模式与模式匹配]] [0/3]
 ** TODO [[file:ch19-01-all-the-places-for-patterns.md][所有可能会用到模式的位置]]
