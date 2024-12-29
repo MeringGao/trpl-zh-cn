@@ -318,28 +318,359 @@ CLOSED: [2024-12-26 Thu 22:46]
 - State "DONE"       from "TODO"       [2024-12-26 Thu 22:46]
 :END:
 
-* TODO [[file:ch10-00-generics.md][泛型、Trait 和生命周期]] [1/3]
+* DONE [[file:ch10-00-generics.md][泛型、Trait 和生命周期]] [3/3]
+CLOSED: [2024-12-29 Sun 14:14]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 14:14]
+:END:
+
 ** DONE [[file:ch10-01-syntax.md][泛型数据类型]]
 CLOSED: [2024-12-26 Thu 23:01]
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2024-12-26 Thu 23:01]
 :END:
 
-** TODO [[file:ch10-02-traits.md][Trait：定义共同行为]]
-** TODO [[file:ch10-03-lifetime-syntax.md][生命周期确保引用有效]]
+** DONE [[file:ch10-02-traits.md][Trait：定义共同行为]]
+CLOSED: [2024-12-29 Sun 12:22]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 12:22]
+:END:
 
-* TODO [[file:ch11-00-testing.md][编写自动化测试]] [0/3]
-** TODO [[file:ch11-01-writing-tests.md][如何编写测试]]
-** TODO [[file:ch11-02-running-tests.md][控制测试如何运行]]
-** TODO [[file:ch11-03-test-organization.md][测试的组织结构]]
+trait 作为参数
 
-* TODO [[file:ch12-00-an-io-project.md][一个 I/O 项目：构建命令行程序]] [0/6]
-** TODO [[file:ch12-01-accepting-command-line-arguments.md][接受命令行参数]]
-** TODO [[file:ch12-02-reading-a-file.md][读取文件]]
-** TODO [[file:ch12-03-improving-error-handling-and-modularity.md][重构以改进模块化与错误处理]]
-** TODO [[file:ch12-04-testing-the-librarys-functionality.md][采用测试驱动开发完善库的功能]]
-** TODO [[file:ch12-05-working-with-environment-variables.md][处理环境变量]]
-** TODO [[file:ch12-06-writing-to-stderr-instead-of-stdout.md][将错误信息输出到标准错误而不是标准输出]]
+#+begin_src rust
+
+
+
+
+pub fn notify(item: &impl Summary) {
+    println!("Breaking news! {}", item.summarize());
+}
+
+pub fn notify<T: Summary>(item: &T) {
+    println!("Breaking news! {}", item.summarize());
+}
+
+pub fn notify(item: &(impl Summary + Display)) {
+
+pub fn notify<T: Summary + Display>(item: &T)
+
+
+fn some_function<T, U>(t: &T, u: &U) -> i32
+where
+    T: Display + Clone,
+    U: Clone + Debug,
+{
+#+end_src
+
+作为返回值,需要注意, 不能返回不同的类型, 这里要结合 Box<imp Summary>
+
+#+begin_src rust
+  fn returns_summarizable(switch: bool) -> impl Summary {
+      if switch {
+          NewsArticle {
+              headline: String::from(
+                  "Penguins win the Stanley Cup Championship!",
+              ),
+              location: String::from("Pittsburgh, PA, USA"),
+              author: String::from("Iceburgh"),
+              content: String::from(
+                  "The Pittsburgh Penguins once again are the best \
+                   hockey team in the NHL.",
+              ),
+          }
+      } else {
+          Tweet {
+              username: String::from("horse_ebooks"),
+              content: String::from(
+                  "of course, as you probably already know, people",
+              ),
+              reply: false,
+              retweet: false,
+          }
+      }
+  }
+#+end_src
+
+** DONE [[file:ch10-03-lifetime-syntax.md][生命周期确保引用有效]]
+CLOSED: [2024-12-29 Sun 14:13]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 14:13]
+:END:
+
+rust 中的每一个引用都存在生命周期,引用保持有效的作用域. 生命周期大部分时候是可以
+自动推断出来的. 如果编译器不能推断的时候就需要手动标注了
+
+最核心的是被引用的值,要在该作用域内有效
+
+#+begin_src text
+  fn main() {
+      let r;                // ---------+-- 'a
+                            //          |
+      {                     //          |
+          let x = 5;        // -+-- 'b  |
+          r = &x;           //  |       |
+      }                     // -+       |
+                            //          |
+      println!("r: {r}");   //          |
+  }                         // ---------+
+#+end_src
+r 的生命周期是 'a, 但是 r 引用的值是 'b, 他小于'a
+
+#+begin_src text
+  fn main() {
+      let x = 5;            // ----------+-- 'b
+                            //           |
+      let r = &x;           // --+-- 'a  |
+                            //   |       |
+      println!("r: {r}");   //   |       |
+                            // --+       |
+  }                         // ----------+
+#+end_src
+
+x 的生命周期大于 'b 大于 r 的生命周期, 所以 r 有效
+
+#+begin_src text
+  fn longest(x: &str, y: &str) -> &str {
+      if x.len() > y.len() {
+          x
+      } else {
+          y
+      }
+  }
+#+end_src
+
+x,y 和返回值都有一个生命周期, 例如叫做, 'a,'b,'c 这里并不知道返回值的'c 和'a,'b
+的关系, 所以返回之后 'c 到底是否可以用就不知道了,
+
+#+begin_src text
+  fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
+      if x.len() > y.len() {
+          x
+      } else {
+          y
+      }
+  }
+#+end_src
+这里注释生命周期, 可以理解为 返回值的生命周期至少和输入参数中较小的一致
+
+#+begin_src text
+  fn main() {
+      let string1 = String::from("long string is long");
+      let result;
+      {
+          let string2 = String::from("xyz");
+          result = longest(string1.as_str(), string2.as_str());
+      }
+      println!("The longest string is {result}");
+  }
+  // 这个不能通过,是因为 result 的生命周期和 string2 一致
+#+end_src
+
+#+begin_src text
+  fn longest<'a>(x: &str, y: &str) -> &'a str {
+      let result = String::from("really long string");
+      result.as_str()
+  }
+#+end_src
+当从函数返回一个引用，返回值的生命周期参数需要与一个参数的生命周期参数相匹配。如
+果返回的引用 没有 指向任何一个参数，那么唯一的可能就是它指向一个函数内部创建的值。
+然而它将会是一个悬垂引用，因为它将会在函数结束时离开作用域
+
+*规则*
+
+函数或方法的参数的生命周期被称为 输入生命周期（input lifetimes），而返回值的生命
+周期被称为 输出生命周期（output lifetimes）。
+
+第一条规则是编译器为每一个引用参数都分配一个生命周期参数。换句话说就是，函数有一
+个引用参数的就有一个生命周期参数: ~fn foo<'a>(x: &'a i32)~ 有两个引用参数的函数就
+有两个不同的生命周期参数 ~fn foo<'a, 'b>(x: &'a i32, y: &'b i32)~ 依此类推。
+
+第二条规则是如果只有一个输入生命周期参数，那么它被赋予所有输出生命周期参数 ~fn
+foo<'a>(x: &'a i32) -> &'a i32~
+
+第三条规则是如果方法有多个输入生命周期参数并且其中一个参数是 &self 或 &mut self，
+说明是个对象的方法 (method)(译者注：这里涉及 rust 的面向对象参见 17 章)，那么所
+有输出生命周期参数被赋予 self 的生命周期。第三条规则使得方法更容易读写，因为只需
+更少的符号。
+
+* DONE [[file:ch11-00-testing.md][编写自动化测试]] [3/3]
+CLOSED: [2024-12-29 Sun 14:29]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 14:29]
+:END:
+
+** DONE [[file:ch11-01-writing-tests.md][如何编写测试]]
+CLOSED: [2024-12-29 Sun 14:20]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 14:20]
+:END:
+
+#+begin_src rust
+  #[cfg(test)]
+  mod tests {
+      use super::*;
+
+      #[test]
+      fn it_works() {
+          let result = add(2, 2);
+          assert_eq!(result, 4);
+      }
+  }
+  #[test]
+  fn greeting_contains_name() {
+      let result = greeting("Carol");
+      assert!(
+          result.contains("Carol"),
+          "Greeting did not contain name, value was `{result}`"
+      );
+  }
+#+end_src
+
+#+begin_src rust
+  // --snip--
+
+  impl Guess {
+      pub fn new(value: i32) -> Guess {
+          if value < 1 {
+              panic!(
+                  "Guess value must be greater than or equal to 1, got {value}."
+              );
+          } else if value > 100 {
+              panic!(
+                  "Guess value must be less than or equal to 100, got {value}."
+              );
+          }
+
+          Guess { value }
+      }
+  }
+
+  #[cfg(test)]
+  mod tests {
+      use super::*;
+
+      #[test]
+      #[should_panic(expected = "less than or equal to 100")]
+      fn greater_than_100() {
+          Guess::new(200);
+      }
+  }
+#+end_src
+#+begin_src rust
+  pub fn add(left: usize, right: usize) -> usize {
+      left + right
+  }
+
+  #[cfg(test)]
+  mod tests {
+      use super::*;
+
+      // ANCHOR: here
+      #[test]
+      fn it_works() -> Result<(), String> {
+          let result = add(2, 2);
+
+          if result == 4 {
+              Ok(())
+          } else {
+              Err(String::from("two plus two does not equal four"))
+          }
+      }
+      // ANCHOR_END: here
+  }
+#+end_src
+
+** DONE [[file:ch11-02-running-tests.md][控制测试如何运行]]
+CLOSED: [2024-12-29 Sun 14:29]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 14:29]
+:END:
+
+默认多个线程执行测试, 可以限定 ~$ cargo test -- --test-threads=1~
+
+默认被测试的函数中有 print 时,这些 print 会被忽略, ~$ cargo test -- --show-output~
+可以打开
+
+默认忽略的测试代码, 如果希望只执行被忽略的测试 ~cargo test -- --ignored~ 或者 全部
+测试 ~cargo test -- --include-ignored~
+#+begin_src rust
+  #[ignore]
+  fn expensive_test() {
+      // 需要运行一个小时的代码
+  }
+#+end_src
+
+** DONE [[file:ch11-03-test-organization.md][测试的组织结构]]
+CLOSED: [2024-12-29 Sun 14:29]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 14:29]
+:END:
+
+对于模块的私有函数等测试,放在模块内部
+
+而对于希望集成测试的,放在 tests 目录下
+
+* DONE [[file:ch12-00-an-io-project.md][一个 I/O 项目：构建命令行程序]] [6/6]
+CLOSED: [2024-12-29 Sun 16:57]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 16:57]
+:END:
+
+** DONE [[file:ch12-01-accepting-command-line-arguments.md][接受命令行参数]]
+CLOSED: [2024-12-29 Sun 16:50]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 16:50]
+:END:
+
+** DONE [[file:ch12-02-reading-a-file.md][读取文件]]
+CLOSED: [2024-12-29 Sun 16:56]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 16:56]
+:END:
+
+#+begin_src rust
+  use std::error::Error;
+
+  // --snip--
+
+  fn run(config: Config) -> Result<(), Box<dyn Error>> {
+      let contents = fs::read_to_string(config.file_path)?;
+
+      println!("With text:\n{contents}");
+
+      Ok(())
+  }
+
+#+end_src
+
+** DONE [[file:ch12-03-improving-error-handling-and-modularity.md][重构以改进模块化与错误处理]]
+CLOSED: [2024-12-29 Sun 16:57]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 16:57]
+:END:
+
+** DONE [[file:ch12-04-testing-the-librarys-functionality.md][采用测试驱动开发完善库的功能]]
+CLOSED: [2024-12-29 Sun 16:57]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 16:57]
+:END:
+
+** DONE [[file:ch12-05-working-with-environment-variables.md][处理环境变量]]
+CLOSED: [2024-12-29 Sun 16:57]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 16:57]
+:END:
+
+~os.env.var~
+
+** DONE [[file:ch12-06-writing-to-stderr-instead-of-stdout.md][将错误信息输出到标准错误而不是标准输出]]
+CLOSED: [2024-12-29 Sun 16:57]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-29 Sun 16:57]
+:END:
+
+~eprintln!~
 
 * TODO [[file:ch13-00-functional-features.md][Rust 中的函数式语言功能：迭代器与闭包]] [0/4]
 ** TODO [[file:ch13-01-closures.md][闭包：可以捕获其环境的匿名函数]]
