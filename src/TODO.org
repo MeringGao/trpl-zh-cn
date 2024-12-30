@@ -1362,17 +1362,278 @@ CLOSED: [2024-12-30 Mon 13:02]
 
 
 
-* TODO [[file:ch20-00-advanced-features.md][高级特征]] [0/5]
-** TODO [[file:ch20-01-unsafe-rust.md][不安全的 Rust]]
-** TODO [[file:ch20-03-advanced-traits.md][高级 trait]]
-** TODO [[file:ch20-04-advanced-types.md][高级类型]]
-** TODO [[file:ch20-05-advanced-functions-and-closures.md][高级函数与闭包]]
-** TODO [[file:ch20-06-macros.md][宏]]
+* DONE [[file:ch20-00-advanced-features.md][高级特征]] [5/5]
+CLOSED: [2024-12-30 Mon 22:34]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-30 Mon 22:34]
+:END:
 
-* TODO [[file:ch21-00-final-project-a-web-server.md][最后的项目：构建多线程 web server]] [0/3]
-** TODO [[file:ch21-01-single-threaded.md][建立单线程 web server]]
-** TODO [[file:ch21-02-multithreaded.md][将单线程 server 变为多线程 server]]
-** TODO [[file:ch21-03-graceful-shutdown-and-cleanup.md][优雅停机与清理]]
+** DONE [[file:ch20-01-unsafe-rust.md][不安全的 Rust]]
+CLOSED: [2024-12-30 Mon 22:26]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-30 Mon 22:26]
+:END:
+
+这些超能力是：
+
+- 解引用裸指针
+- 调用不安全的函数或方法
+- 访问或修改可变静态变量
+- 实现不安全 trait
+- 访问 union 的字段
+
+解引用裸指针
+
+回到第四章的 “悬垂引用” 部分，那里提到了编译器会确保引用总是有效的。不安全 Rust
+有两个被称为 裸指针（raw pointers）的类似于引用的新类型。和引用一样，裸指针是不
+可变或可变的，分别写作 *const T 和 *mut T。这里的星号不是解引用运算符；它是类型
+名称的一部分。在裸指针的上下文中，不可变 意味着指针解引用之后不能直接赋值
+
+#+begin_src rust
+  let mut num = 5;
+
+  let r1 = &num as *const i32;
+  let r2 = &mut num as *mut i32;
+  // 注意这里没有引入 unsafe 关键字。可以在安全代码中 创建 裸指针，只是不能在不安全块之外 解引用 裸指针，稍后便会看到
+
+  // 不过不能 解引用 裸指针和读取其指向的数据。现在我们要做的就是对裸指针使用解引用运算符 *，这需要一个 unsafe 块
+  unsafe {
+          println!("r1 is: {}", *r1);
+          println!("r2 is: {}", *r2);
+      }
+  // 创建一个指针不会造成任何危险；只有当访问其指向的值时才有可能遇到无效的值
+#+end_src
+
+创建不安全代码的安全抽象
+
+#+begin_src rust
+  fn split_at_mut(values: &mut [i32], mid: usize) -> (&mut [i32], &mut [i32]) {
+      let len = values.len();
+
+      assert!(mid <= len);
+
+      (&mut values[..mid], &mut values[mid..])
+  }
+
+  // 这里无法通过编译
+  // Rust 的借用检查器不能理解我们要借用这个 slice 的两个不同部分：它只知道我们借用了同一个 slice 两次。本质上借用 slice 的不同部分是可以的，因为结果两个 slice 不会重叠，不过 Rust 还没有智能到能够理解这些。当我们知道某些事是可以的而 Rust 不知道的时候，就是触及不安全代码的时候了
+
+  use std::slice;
+
+  fn split_at_mut(values: &mut [i32], mid: usize) -> (&mut [i32], &mut [i32]) {
+      let len = values.len();
+      let ptr = values.as_mut_ptr();
+
+      assert!(mid <= len);
+
+      unsafe {
+          (
+              slice::from_raw_parts_mut(ptr, mid),
+              slice::from_raw_parts_mut(ptr.add(mid), len - mid),
+          )
+      }
+  }
+#+end_src
+
+下面这段代码可以通过编译,但是可能会导致程序奔溃
+#+begin_src rust
+  use std::slice;
+
+  let address = 0x01234usize;
+  let r = address as *mut i32;
+
+  let values: &[i32] = unsafe { slice::from_raw_parts_mut(r, 10000) };
+#+end_src
+
+使用 extern 函数调用外部代码
+#+begin_src rust
+  extern "C" {
+      fn abs(input: i32) -> i32;
+  }
+
+  fn main() {
+      unsafe {
+          println!("Absolute value of -3 according to C: {}", abs(-3));
+      }
+  }
+#+end_src
+
+访问或修改可变静态变量
+
+#+begin_src rust
+  static mut COUNTER: u32 = 0;
+
+  fn add_to_count(inc: u32) {
+      unsafe {
+          COUNTER += inc;
+      }
+  }
+
+  fn main() {
+      add_to_count(3);
+
+      unsafe {
+          println!("COUNTER: {COUNTER}");
+      }
+  }
+#+end_src
+
+实现不安全 trait
+
+#+begin_src rust
+  unsafe trait Foo {
+      // methods go here
+  }
+
+  unsafe impl Foo for i32 {
+      // method implementations go here
+  }
+
+  fn main() {}
+#+end_src
+
+** DONE [[file:ch20-03-advanced-traits.md][高级 trait]]
+CLOSED: [2024-12-30 Mon 22:26]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-30 Mon 22:26]
+:END:
+
+实现了多个 trait 且方法同名如何指定调用某个 triat 的方法
+#+begin_src rust
+  fn main() {
+      let person = Human;
+      Pilot::fly(&person);
+      Wizard::fly(&person);
+      person.fly();
+  }
+#+end_src
+
+限定必须先实现某写 trait
+#+begin_src rust
+  use std::fmt;
+
+  trait OutlinePrint: fmt::Display {
+      fn outline_print(&self) {
+          let output = self.to_string();
+          let len = output.len();
+          println!("{}", "*".repeat(len + 4));
+          println!("*{}*", " ".repeat(len + 2));
+          println!("* {output} *");
+          println!("*{}*", " ".repeat(len + 2));
+          println!("{}", "*".repeat(len + 4));
+      }
+  }
+#+end_src
+
+newtype 模式用以在外部类型上实现外部 trait,从而绕开孤儿规则
+#+begin_src rust
+  use std::fmt;
+
+  struct Wrapper(Vec<String>);
+
+  impl fmt::Display for Wrapper {
+      fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+          write!(f, "[{}]", self.0.join(", "))
+      }
+  }
+
+  fn main() {
+      let w = Wrapper(vec![String::from("hello"), String::from("world")]);
+      println!("w = {w}");
+  }
+#+end_src
+
+
+** DONE [[file:ch20-04-advanced-types.md][高级类型]]
+CLOSED: [2024-12-30 Mon 22:33]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-30 Mon 22:33]
+:END:
+
+#+begin_src rust
+  type Thunk = Box<dyn Fn() + Send + 'static>;
+
+  let f: Thunk = Box::new(|| println!("hi"));
+
+  fn takes_long_type(f: Thunk) {
+      // --snip--
+  }
+
+  fn returns_long_type() -> Thunk {
+      // --snip--
+  }
+
+#+end_src
+
+** DONE [[file:ch20-05-advanced-functions-and-closures.md][高级函数与闭包]]
+CLOSED: [2024-12-30 Mon 22:33]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-30 Mon 22:33]
+:END:
+
+函数指针, 函数满足类型 fn（小写的 f），不要与闭包 trait 的 Fn 相混淆。fn 被称为
+函数指针（function pointer）
+
+#+begin_src rust
+  fn add_one(x: i32) -> i32 {
+      x + 1
+  }
+
+  fn do_twice(f: fn(i32) -> i32, arg: i32) -> i32 {
+      f(arg) + f(arg)
+  }
+
+  fn main() {
+      let answer = do_twice(add_one, 5);
+
+      println!("The answer is: {answer}");
+  }
+#+end_src
+
+返回闭包: 闭包表现为 trait，这意味着不能直接返回闭包。对于大部分需要返回 trait
+的情况，可以使用实现了期望返回的 trait 的具体类型来替代函数的返回值。但是这不能
+用于闭包，因为它们没有一个可返回的具体类型；例如不允许使用函数指针 fn 作为返回值
+类型。
+
+#+begin_src rust
+  fn returns_closure() -> Box<dyn Fn(i32) -> i32> {
+      Box::new(|x| x + 1)
+  }
+#+end_src
+
+
+
+** DONE [[file:ch20-06-macros.md][宏]]
+CLOSED: [2024-12-30 Mon 22:34]
+:LOGBOOK:
+- State "DONE"       from              [2024-12-30 Mon 22:34]
+:END:
+
+宏小册
+
+* DONE [[file:ch21-00-final-project-a-web-server.md][最后的项目：构建多线程 web server]] [3/3]
+CLOSED: [2024-12-30 Mon 22:39]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-30 Mon 22:39]
+:END:
+
+** DONE [[file:ch21-01-single-threaded.md][建立单线程 web server]]
+CLOSED: [2024-12-30 Mon 22:39]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-30 Mon 22:39]
+:END:
+
+** DONE [[file:ch21-02-multithreaded.md][将单线程 server 变为多线程 server]]
+CLOSED: [2024-12-30 Mon 22:39]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-30 Mon 22:39]
+:END:
+
+** DONE [[file:ch21-03-graceful-shutdown-and-cleanup.md][优雅停机与清理]]
+CLOSED: [2024-12-30 Mon 22:39]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-12-30 Mon 22:39]
+:END:
 
 * TODO [[file:appendix-00.md][附录]] [0/7]
 ** TODO [[file:appendix-01-keywords.md][A - 关键字]]
